@@ -1,0 +1,18 @@
+{
+  "name": "iMessage 2",
+  "short_name": "Mensagens",
+  "description": "Aplicação pessoal de mensagens",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#087cff",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
