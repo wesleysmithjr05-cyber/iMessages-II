@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="iMessage 2">
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>iMessage 2</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{background:#f2f3f7;color:#111;height:100vh;height:100dvh;overflow:hidden}
+button{cursor:pointer;border:none}
+.app{display:flex;height:100vh;height:100dvh;max-width:1500px;margin:auto;background:white}
+.sidebar{width:360px;min-width:300px;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;background:#fafafa}
+.sidebar-header{padding:25px 20px 15px}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.header-top h1{font-size:30px;font-weight:750;letter-spacing:-1px}
+.new-chat{background:#087cff;color:white;width:39px;height:39px;border-radius:50%;font-size:25px}
+.search{width:100%;padding:12px 15px;border-radius:12px;border:none;background:#eaeaf0;font-size:15px;outline:none}
+.conversation-list{overflow-y:auto;flex:1}
+.conversation{display:flex;align-items:center;gap:12px;padding:14px 17px;cursor:pointer;border-bottom:1px solid #ededed;transition:background .2s}
+.conversation:hover{background:#eeeeF4}
+.conversation.active{background:#e5efff}
+.avatar{width:52px;height:52px;flex-shrink:0;border-radius:50%;background:linear-gradient(135deg,#5ca8ff,#1767dc);color:white;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.conversation-info{flex:1;min-width:0}
+.conversation-name{font-size:16px;font-weight:650;margin-bottom:5px}
+.conversation-preview{color:#777;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conversation-time{font-size:11px;color:#999;align-self:flex-start}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;background:white}
+.chat-header{height:78px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 25px}
+.chat-user{display:flex;align-items:center;gap:12px}
+.chat-user .avatar{width:43px;height:43px}
+.chat-user h3{font-size:16px}
+.chat-user small{color:#888}
+.chat-actions{display:flex;gap:15px;color:#087cff;font-size:22px}
+.messages{flex:1;padding:25px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:#fff}
+.date-label{text-align:center;color:#999;font-size:12px;margin:10px 0}
+.message{max-width:72%;padding:11px 15px;border-radius:19px;font-size:15px;line-height:1.45;overflow-wrap:anywhere;animation:appear .2s ease}
+@keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.message.received{align-self:flex-start;background:#e9e9eb;color:#111;border-bottom-left-radius:5px}
+.message.sent{align-self:flex-end;background:#087cff;color:white;border-bottom-right-radius:5px}
+.message-time{display:block;font-size:10px;opacity:.7;margin-top:5px;text-align:right}
+.empty{flex:1;display:flex;justify-content:center;align-items:center;color:#999;text-align:center;padding:30px}
+.composer{padding:15px 20px;border-top:1px solid #eee;display:flex;align-items:center;gap:10px;padding-bottom:max(15px,env(safe-area-inset-bottom))}
+.composer input{flex:1;border:1px solid #ddd;border-radius:25px;padding:13px 18px;font-size:15px;outline:none;min-width:0}
+.send-button{background:#087cff;color:white;width:43px;height:43px;border-radius:50%;font-size:19px}
+.icon-button{background:transparent;color:#087cff;font-size:21px;padding:8px}
+.menu{padding:12px 5px;border-top:1px solid #eee;display:flex;justify-content:space-around;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.menu button{background:transparent;color:#777;font-size:11px;flex:1}
+.menu button span{display:block;font-size:20px;margin-bottom:4px}
+.menu button.active{color:#087cff;font-weight:700}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal.show{display:flex}
+.modal-content{background:white;width:100%;max-width:380px;max-height:85vh;overflow-y:auto;border-radius:20px;padding:24px}
+.modal-content h2{margin-bottom:18px}
+.modal-content input:not([type=file]),.modal-content select{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;margin-bottom:12px;font-size:15px;background:white}
+.modal-buttons{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}
+.modal-buttons button{padding:10px 17px;border-radius:9px}
+.cancel{background:#eee}
+.confirm{background:#087cff;color:white}
+.profile-upload{display:block;margin-bottom:12px;font-size:13px;color:#666}
+.back-button{display:none;background:transparent;color:#087cff;font-size:24px;margin-right:5px}
+.notification-setting{padding:13px 0;border-bottom:1px solid #eee}
+.notification-setting label{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+.notification-setting small{display:block;color:#888;margin-top:5px}
+.notification-setting select,.notification-setting input[type=text]{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;background:white;font-size:14px}
+.notification-setting input[type=checkbox]{width:19px;height:19px;accent-color:#087cff}
+.notification-preview{background:#f1f2f6;border-radius:14px;padding:15px;margin-top:15px}
+.notification-preview strong{display:block;font-size:13px;margin-bottom:6px}
+.notification-preview p{font-size:14px;color:#555}
+.settings-title{font-size:13px;color:#888;margin:15px 0 5px}
+@media(max-width:700px){
+.app{position:relative}
+.sidebar{width:100%;min-width:0;border-right:none}
+.chat{display:none;width:100%}
+.app.chat-open .sidebar{display:none}
+.app.chat-open .chat{display:flex}
+.chat-header{padding:0 12px}
+.messages{padding:15px}
+.composer{padding:10px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.back-button{display:block!important}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app" id="app">
+
+<aside class="sidebar">
+
+<header class="sidebar-header">
+<div class="header-top">
+<h1>Mensagens</h1>
+<button class="new-chat" id="newChat" aria-label="Nova conversa">+</button>
+</div>
+<input class="search" id="search" type="search" placeholder="Pesquisar">
+</header>
+
+<div class="conversation-list" id="conversationList"></div>
+
+<div class="menu">
+<button id="allButton" class="active"><span>✉</span>Todas</button>
+<button id="unknownButton"><span>?</span>Desconhecidos</button>
+<button id="mutedButton"><span>🔕</span>Silenciados</button>
+<button id="notificationsButton"><span>🔔</span>Notificações</button>
+</div>
+
+</aside>
+
+<main class="chat">
+
+<header class="chat-header">
+<div class="chat-user">
+<button class="back-button" id="backButton">‹</button>
+<div class="avatar" id="headerAvatar">i</div>
+<div>
+<h3 id="headerName">Mensagens</h3>
+<small id="headerNumber">Seleciona uma conversa</small>
+</div>
+</div>
+
+<div class="chat-actions">
+<button class="icon-button" id="contactEdit" title="Editar contacto">✎</button>
+<button class="icon-button" id="deleteChat" title="Apagar conversa">⋯</button>
+</div>
+</header>
+
+<section class="messages" id="messages">
+<div class="empty">As tuas conversas aparecerão aqui.</div>
+</section>
+
+<form class="composer" id="messageForm">
+<button type="button" class="icon-button" id="attachButton" title="Anexar fotografia">＋</button>
+<input id="messageInput" type="text" placeholder="SMS / Mensagem" autocomplete="off">
+<button class="send-button" type="submit">↑</button>
+</form>
+
+</main>
+</div>
+
+<!-- MODAL DE CONTACTOS -->
+<div class="modal" id="contactModal">
+<div class="modal-content">
+<h2 id="modalTitle">Nova conversa</h2>
+<input id="contactName" placeholder="Nome do contacto">
+<input id="contactPhone" placeholder="Número de telefone" type="tel">
+
+<label class="profile-upload">
+Fotografia do contacto
+<input id="contactPhoto" type="file" accept="image/*">
+</label>
+
+<div class="modal-buttons">
+<button class="cancel" id="cancelModal" type="button">Cancelar</button>
+<button class="confirm" id="saveContact" type="button">Guardar</button>
+</div>
+</div>
+</div>
+
+<!-- MODAL DE NOTIFICAÇÕES -->
+<div class="modal" id="notificationsModal">
+<div class="modal-content">
+
+<h2>🔔 Notificações</h2>
+<p style="font-size:13px;color:#888;margin-bottom:15px">
+Personaliza a forma como os avisos aparecem nesta aplicação.
+</p>
+
+<div class="notification-setting">
+<label for="notificationsEnabled">Ativar notificações</label>
+<input type="checkbox" id="notificationsEnabled" checked>
+<small>Ativa ou desativa os avisos da aplicação.</small>
+</div>
+
+<div class="notification-setting">
+<label for="notificationFormat">Formato da notificação</label>
+<select id="notificationFormat">
+<option value="standard">Padrão</option>
+<option value="compact">Compacta</option>
+<option value="detailed">Detalhada</option>
+<option value="minimal">Minimalista</option>
+</select>
+</div>
+
+<div class="notification-setting">
+<label for="notificationName">Nome apresentado</label>
+<select id="notificationName">
+<option value="contact">Nome do contacto</option>
+<option value="app">iMessage 2</option>
+<option value="both">Aplicação e contacto</option>
+</select>
+</div>
+
+<div class="notification-setting">
+<label for="notificationContent">Conteúdo da mensagem</label>
+<select id="notificationContent">
+<option value="full">Mostrar mensagem completa</option>
+<option value="partial">Mostrar apenas prévia</option>
+<option value="hidden">Ocultar mensagem</option>
+</select>
+</div>
+
+<div class="notification-setting">
+<label for="notificationSound">Som</label>
+<select id="notificationSound">
+<option value="default">Padrão</option>
+<option value="silent">Silencioso</option>
+</select>
+</div>
+
+<div class="notification-setting">
+<label for="notificationPosition">Estilo visual</label>
+<select id="notificationPosition">
+<option value="banner">Faixa</option>
+<option value="card">Cartão</option>
+<option value="simple">Simples</option>
+</select>
+</div>
+
+<div class="notification-preview">
+<strong>Pré-visualização</strong>
+<p id="notificationPreview">iMessage 2 — Nova mensagem recebida.</p>
+</div>
+
+<div class="modal-buttons">
+<button class="cancel" id="closeNotifications" type="button">Fechar</button>
+<button class="confirm" id="saveNotifications" type="button">Guardar</button>
+</div>
+
+</div>
+</div>
+
+<input type="file" id="attachmentInput" accept="image/*" hidden>
+
+<script src="app.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function(error) {
+      console.log("Service Worker não foi registado:", error);
+    });
+  });
+}
+</script>
+
+</body>
+</html>
